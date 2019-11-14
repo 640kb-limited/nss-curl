@@ -21,3 +21,9 @@ I tested the installation on Ubuntu 18.04, you will need to change Makefile mayb
 
 * Groups support
 * HTTP headers support
+
+## License
+
+Copyright (c) 2019 Roman Yerin &lt;r.yerin@640kb.co.uk&gt;
+
+Licensed under the 3-clause BSD license.
