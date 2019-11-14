@@ -23,6 +23,24 @@ passwd:         compat curl
 group:          compat
 ```
 
+## Configuration
+
+The module is configured via /etc/nss_curl.conf that is a JSON data file.
+
+```
+{
+	"passwd": "https://example.com/users.json",
+	"groups": "https://example.com/groups.json",
+	"headers":[
+		{"Authorization": "Basic dGVzdDp0ZXN0"}
+	],
+	"cache_directory": "/tmp",
+	"cache_valid": 300
+}
+```
+
+I think, keys' names are self-documented.
+
 ## TODO
 
 * Groups support
