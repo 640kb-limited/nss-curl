@@ -1,0 +1,4 @@
+*.so*
+libnss_curl-test
+*.sublime*
+main.c
