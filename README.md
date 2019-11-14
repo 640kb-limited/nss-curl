@@ -16,6 +16,12 @@ I tested the installation on Ubuntu 18.04, you will need to change Makefile mayb
 1. Install dependencies
 1. make
 1. make install
+1. Edit /etc/nsswitch.conf, add "curl" to the desired sections
+
+```
+passwd:         compat curl
+group:          compat
+```
 
 ## TODO
 
