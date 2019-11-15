@@ -50,4 +50,4 @@ I think, keys' names are self-documented.
 
 Copyright (c) 2019 Roman Yerin &lt;r.yerin@640kb.co.uk&gt;
 
-Licensed under the 3-clause BSD license.
+Licensed under the GPLv3 license.
