@@ -64,6 +64,7 @@ int cache_valid(char *filename, int valid_sec){
 }
 
 int cache_save(char *filename, void *data, size_t size){
+	umask(0x077);
 	FILE *file = fopen(filename, "w");
 	fwrite(data, 1, size, file);
 	fclose(file);
