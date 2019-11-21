@@ -1,9 +1,9 @@
 #include <nss.h>
 #include <pwd.h>
-#include <curl/curl.h>
 #include <syslog.h>
 #include <stdlib.h>
 #include <string.h>
+#include <curl/curl.h>
 #include "nss_curl_conf.h"
 #include "json.h"
 #include "passwd.h"

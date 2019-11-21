@@ -33,7 +33,7 @@ int init_settings(){
 		return 0;
 	}
 	size_t total_bytes = 0;
-	size_t chunk_size = 32*1024;
+	size_t chunk_size = 32*8192;
 	char *data = NULL;
 	
 	while(!feof(file)){
@@ -41,13 +41,18 @@ int init_settings(){
 		size_t count = fread(data + total_bytes, 1, chunk_size, file);
 		total_bytes += count;
 		if(count < chunk_size) {
-			data = realloc(data, total_bytes);
+			data = realloc(data, total_bytes + 1);
 		}
+		memset(data + total_bytes, 0, 1);
 	}
 	
 	fclose(file);
 	if(total_bytes) {
 		parse_settings(data, &settings_data, &raw_data);
+		if(!settings_data) {
+			syslog(LOG_DEBUG, "Can not parse settings");
+			return 0;
+		};
 		free(data);
 		return 1;
 	} else {

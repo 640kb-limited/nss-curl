@@ -92,11 +92,105 @@ int parse_passwd(char *data, user_s **users_ref, char **raw_data_ref, int *user_
 	return 1;
 }
 
+int parse_group(char *data, group_s **groups_ref, char **raw_data_ref, int *group_count_rv){
+	json_t *root;
+	json_error_t error;
+	char res = 0;
+	int group_count = 0;
+	group_s *groups = NULL;
+	char *raw_data = NULL;
+
+	root = json_loads(data, 0, &error);
+	if(!root){
+		res = -1;
+		syslog(LOG_DEBUG,"Passwd JSON parse failed: %s", error.text);
+		return 0;
+	} else {
+		if(!json_is_array(root)){
+			res = -1;
+			json_decref(root);
+			syslog(LOG_DEBUG,"Passwd JSON top level entity should be an array");
+			return 0;
+		} else {
+			int list_size = json_array_size(root);
+			int total_raw_size = 0;
+			for(int i = 0; i < list_size; i++){
+				json_t *data = json_array_get(root, i);
+				if(json_is_object(data)){
+					json_t *j_gr_name = json_object_get(data, "name");
+					json_t *j_gr_gid = json_object_get(data, "gid");
+					json_t *j_gr_members = json_object_get(data, "members");
+					json_t *j_gr_passwd = json_object_get(data, "passwd");
+					if (
+						json_is_string(j_gr_name)
+						&& json_is_integer(j_gr_gid)
+						&& json_is_array(j_gr_members)
+						&& json_is_string(j_gr_passwd)
+						) 
+					{
+						groups = realloc(groups, (1 + group_count) * sizeof(group_s));
+						groups[group_count].len = 0;
+						int member_count = 0;
+						for(int m = 0; m < json_array_size(j_gr_members); m++){
+							json_t *j_m = json_array_get(j_gr_members, m);
+							if(json_is_string(j_m)) { 
+								groups[group_count].len += json_string_length(j_m) + 1;
+								member_count++;
+							}
+						}
+						groups[group_count].len += json_string_length(j_gr_name) + json_string_length(j_gr_passwd) + 2;
+						groups[group_count].offset = 0;
+						if(group_count > 0) {
+							groups[group_count].offset = groups[group_count - 1].offset + groups[group_count - 1].len;
+						}
+
+						total_raw_size += groups[group_count].len;
+						raw_data = realloc(raw_data, total_raw_size);
+						memset(raw_data + groups[group_count].offset, 0, groups[group_count].len);
+
+						size_t offset = groups[group_count].offset;
+
+						groups[group_count].data.gr_name = offset - groups[group_count].offset;
+						strncpy(&raw_data[offset], json_string_value(j_gr_name), json_string_length(j_gr_name));
+
+						offset = offset + json_string_length(j_gr_name) + 1;
+						groups[group_count].data.gr_passwd = offset - groups[group_count].offset;
+						strncpy(&raw_data[offset], json_string_value(j_gr_passwd), json_string_length(j_gr_passwd));
+
+						offset = offset + json_string_length(j_gr_passwd) + 1;
+
+						groups[group_count].data.gr_mem = calloc(sizeof(int), member_count);
+
+						member_count = 0;
+						for(int m = 0; m < json_array_size(j_gr_members); m++){
+							json_t *j_m = json_array_get(j_gr_members, m);
+							if(json_is_string(j_m)) { 
+								strncpy(&raw_data[offset], json_string_value(j_m), json_string_length(j_m));
+								groups[group_count].data.gr_mem[member_count++] = offset - groups[group_count].offset;
+								offset += json_string_length(j_m) + 1;
+							}
+						}
+
+						groups[group_count].data.gr_gid = json_integer_value(j_gr_gid);
+						groups[group_count].data.member_count = member_count;
+						group_count++;
+					}
+				}
+			}
+		}
+	}
+	while (root->refcount > 0) json_decref(root);
+	*group_count_rv = group_count;
+	*groups_ref = groups;
+	*raw_data_ref = raw_data; 
+	return 1;
+}
+
+
 int parse_settings(char *data, settings_s **settings_ref, char **raw_data_ref){
 	json_t *root;
 	json_error_t error;
 	char res = 0;
-	int user_count = 0;
 	settings_s *settings;
 	char *raw_data;
 

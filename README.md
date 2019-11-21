@@ -43,7 +43,7 @@ I think, keys' names are self-documented.
 
 ## TODO
 
-* Groups support
+* ~Groups support~
 * HTTP headers support
 
 ## License
